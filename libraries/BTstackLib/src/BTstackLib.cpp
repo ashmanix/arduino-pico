@@ -396,9 +396,13 @@ BD_ADDR::BD_ADDR(void) {
 }
 
 BD_ADDR::BD_ADDR(const char * address_string, BD_ADDR_TYPE address_type) : address_type(address_type) {
-    (void) address_string;
-    // TODO: implement
-    // log_error("BD_ADDR::BD_ADDR(const char *, BD_ADDR_TYPE) not implemented yet!");
+    int processed = sscanf(address_string, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", address, address + 1,
+                           address + 2, address + 3, address + 4, address + 5);
+    if (processed != 6) { // Set address to zeroes if we did not get six bytes back.
+        for (int i = 0; i < 6; i++) {
+            address[i] = 0;
+        }
+    }
 }
 
 BD_ADDR::BD_ADDR(const uint8_t address[6], BD_ADDR_TYPE address_type) : address_type(address_type) {
@@ -774,6 +778,10 @@ static hci_transport_config_uart_t config = {
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 
 void BTstackManager::setup(void) {
+    setup("BTstack LE Shield");
+}
+
+void BTstackManager::setup(const char * name) {
 
     //#ifdef PIN_LED
     //    pinMode(PIN_LED, OUTPUT);
@@ -822,7 +830,6 @@ void BTstackManager::setup(void) {
     const uint8_t flags[] = { 0x02, 0x01, 0x02 };
     memcpy(&adv_data[pos], flags, sizeof(flags));
     pos += sizeof(flags);
-    const char * name = "BTstack LE Shield";
     adv_data[pos++] = strlen(name) + 1;
     adv_data[pos++] = 0x09;
     memcpy(&adv_data[pos], name, strlen(name));
